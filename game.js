@@ -58,13 +58,7 @@ let readyScene = {
 		this.playButton = this.add.image(92, 284, 'playButton').setOrigin(0, 0);
 		// 设置可交互
 		this.playButton.setInteractive();
-		this.playButton.on(
-			'pointerdown',
-			function () {
-				this.scene.start('play');
-			},
-			this
-		);
+		this.playButton.on('pointerdown', this.scene.start.bind(this.scene, 'play'));
 		this.flappyBirdText = this.add.image(34, 120, 'flappyBirdText').setOrigin(0, 0);
 		this.pajaro = this.add.sprite(220, 120, 'pajaro').setOrigin(0, 0);
 		this.pajaro.play('fly');
@@ -113,14 +107,12 @@ let playScene = {
 			let topPipeY = Phaser.Math.Between(120, 200);
 			// 下管道坐标
 			let bottomPipeY = gap + topPipeY;
-			// 解构
-			let [topPipe, bottomPipe] = pipes;
 			// 要移动的横坐标
 			// （如果子数组长度小于2就使用游戏配置宽度，否则使用最后一个管道的横坐标加步进）
 			let x = this.pipeChildren.length < 2 ? config.width : this.pipeChildren[this.pipeChildren.length - 1].x + this.step;
 
-			topPipe.setPosition(x, topPipeY);
-			bottomPipe.setPosition(x, bottomPipeY);
+			pipes[0].setPosition(x, topPipeY);
+			pipes[1].setPosition(x, bottomPipeY);
 
 			return pipes;
 		};
@@ -128,8 +120,7 @@ let playScene = {
 		// 使帕加罗掉落
 		this.makePajaroFall = function () {
 			this.sound.play('ouch');
-			this.scene.pause();
-			this.scene.launch('over');
+			this.scene.pause().launch('over');
 		}.bind(this);
 	},
 	create() {
@@ -174,10 +165,10 @@ let playScene = {
 		this.scoreText = this.add.text(10, 10, `Score: ${this.score}`);
 
 		// 添加碰撞器
-		let collider = this.physics.add.collider(this.pajaro, this.ground, this.makePajaroFall);
+		this.physics.add.collider(this.pajaro, this.ground, this.makePajaroFall);
 
 		// 添加重叠触发
-		let bump = this.physics.add.overlap(this.pajaro, this.pipeGroup, this.makePajaroFall);
+		this.physics.add.overlap(this.pajaro, this.pipeGroup, this.makePajaroFall);
 	},
 	update() {
 		this.background.tilePositionX += 1;
@@ -210,10 +201,7 @@ let overScene = {
 			'pointerdown',
 			function () {
 				// 结束自己
-				this.scene.stop();
-				// 重启玩耍场景
-				this.scene.stop('play');
-				this.scene.start('play');
+				this.scene.stop().stop('play').start('play');
 			},
 			this
 		);
